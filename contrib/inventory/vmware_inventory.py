@@ -164,7 +164,7 @@ class VMWareInventory(object):
         elif self.args.list:
             # Display list of instances for inventory
             data_to_print = self.inventory
-        return json.dumps(data_to_print, sort_keys=True, indent=2)
+        return json.dumps(data_to_print, indent=2)
 
     def is_cache_valid(self):
         ''' Determines if the cache files have expired, or if it is still valid '''
@@ -187,7 +187,7 @@ class VMWareInventory(object):
     def write_to_cache(self, data):
         ''' Dump inventory to json file '''
         with open(self.cache_path_cache, 'w') as f:
-            f.write(json.dumps(data, sort_keys=True, indent=2))
+            f.write(json.dumps(data, indent=2))
 
     def get_inventory_from_cache(self):
         ''' Read in jsonified inventory '''
