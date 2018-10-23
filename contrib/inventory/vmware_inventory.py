@@ -164,7 +164,7 @@ class VMWareInventory(object):
         elif self.args.list:
             # Display list of instances for inventory
             data_to_print = self.inventory
-        return json.dumps(data_to_print, indent=2)
+        return json.dumps(data_to_print, sort_keys=True, indent=2)
 
     def is_cache_valid(self):
         ''' Determines if the cache files have expired, or if it is still valid '''
@@ -186,14 +186,14 @@ class VMWareInventory(object):
 
     def write_to_cache(self, data):
         ''' Dump inventory to json file '''
-        with open(self.cache_path_cache, 'wb') as f:
-            f.write(json.dumps(data))
+        with open(self.cache_path_cache, 'w') as f:
+            f.write(json.dumps(data, sort_keys=True, indent=2))
 
     def get_inventory_from_cache(self):
         ''' Read in jsonified inventory '''
 
         jdata = None
-        with open(self.cache_path_cache, 'rb') as f:
+        with open(self.cache_path_cache, 'r') as f:
             jdata = f.read()
         return json.loads(jdata)
 
@@ -390,7 +390,7 @@ class VMWareInventory(object):
             instances = [x for x in instances if x.name == self.args.host]
 
         instance_tuples = []
-        for instance in sorted(instances):
+        for instance in instances:
             if self.guest_props:
                 ifacts = self.facts_from_proplist(instance)
             else:
@@ -685,7 +685,7 @@ class VMWareInventory(object):
             if vobj.isalnum():
                 rdata = vobj
             else:
-                rdata = vobj.decode('ascii', 'ignore')
+                rdata = vobj.encode('ascii', 'ignore').decode()
         elif issubclass(type(vobj), bool) or isinstance(vobj, bool):
             rdata = vobj
         elif issubclass(type(vobj), integer_types) or isinstance(vobj, integer_types):
