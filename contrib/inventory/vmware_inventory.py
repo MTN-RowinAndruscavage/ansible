@@ -152,7 +152,7 @@ class VMWareInventory(object):
             try:
                 text = str(text)
             except UnicodeEncodeError:
-                text = text.encode('ascii', 'ignore')
+                text = text.encode('utf-8')
             print('%s %s' % (datetime.datetime.now(), text))
 
     def show(self):
@@ -685,7 +685,7 @@ class VMWareInventory(object):
             if vobj.isalnum():
                 rdata = vobj
             else:
-                rdata = vobj.encode('ascii', 'ignore').decode()
+                rdata = vobj.decode('utf-8').('utf-8')
         elif issubclass(type(vobj), bool) or isinstance(vobj, bool):
             rdata = vobj
         elif issubclass(type(vobj), integer_types) or isinstance(vobj, integer_types):
