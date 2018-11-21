@@ -35,13 +35,10 @@ from ansible.parsing.metadata import extract_metadata
 from ansible.parsing.plugin_docs import read_docstub
 from ansible.parsing.yaml.dumper import AnsibleDumper
 from ansible.plugins.loader import action_loader, fragment_loader
+from ansible.utils.display import Display
 from ansible.utils.plugin_docs import BLACKLIST, get_docstring
 
-try:
-    from __main__ import display
-except ImportError:
-    from ansible.utils.display import Display
-    display = Display()
+display = Display()
 
 
 class DocCLI(CLI):
@@ -78,7 +75,8 @@ class DocCLI(CLI):
         self.parser.add_option("-j", "--json", action="store_true", default=False, dest='json_dump',
                                help='**For internal testing only** Dump json metadata for all plugins.')
         self.parser.add_option("-t", "--type", action="store", default='module', dest='type', type='choice',
-                               help='Choose which plugin type (defaults to "module")',
+                               help='Choose which plugin type (defaults to "module"). '
+                                    'Available plugin types are : {0}'.format(C.DOCUMENTABLE_PLUGINS),
                                choices=C.DOCUMENTABLE_PLUGINS)
         super(DocCLI, self).parse()
 
@@ -263,7 +261,7 @@ class DocCLI(CLI):
 
                 return text
             else:
-                if 'removed' in metadata.get('status', []):
+                if 'removed' in metadata['status']:
                     display.warning("%s %s has been removed\n" % (plugin_type, plugin))
                     return
 
@@ -273,7 +271,7 @@ class DocCLI(CLI):
         except Exception as e:
             display.vvv(traceback.format_exc())
             raise AnsibleError(
-                "%s %s missing documentation (or could not parse documentation): %s\n" % (plugin_type, plugin, str(e)))
+                "%s %s missing documentation (or could not parse documentation): %s\n" % (plugin_type, plugin, to_native(e)))
 
     def find_plugins(self, path, ptype):
 
@@ -512,26 +510,21 @@ class DocCLI(CLI):
                              'community': 'The Ansible Community',
                              'curated': 'A Third Party',
                              }
-        if doc['metadata'].get('metadata_version') in ('1.0', '1.1'):
-            return ["  * This module is maintained by %s" % support_level_msg[doc['metadata']['supported_by']]]
-
-        return []
+        return ["  * This module is maintained by %s" % support_level_msg[doc['metadata']['supported_by']]]
 
     @staticmethod
     def get_metadata_block(doc):
         text = []
-        if doc['metadata'].get('metadata_version') in ('1.0', '1.1'):
-            text.append("METADATA:")
-            text.append('\tSUPPORT LEVEL: %s' % doc['metadata']['supported_by'])
 
-            for k in (m for m in doc['metadata'] if m not in ('version', 'metadata_version', 'supported_by')):
-                if isinstance(k, list):
-                    text.append("\t%s: %s" % (k.capitalize(), ", ".join(doc['metadata'][k])))
-                else:
-                    text.append("\t%s: %s" % (k.capitalize(), doc['metadata'][k]))
-            return text
+        text.append("METADATA:")
+        text.append('\tSUPPORT LEVEL: %s' % doc['metadata']['supported_by'])
 
-        return []
+        for k in (m for m in doc['metadata'] if m != 'supported_by'):
+            if isinstance(k, list):
+                text.append("\t%s: %s" % (k.capitalize(), ", ".join(doc['metadata'][k])))
+            else:
+                text.append("\t%s: %s" % (k.capitalize(), doc['metadata'][k]))
+        return text
 
     def get_man_text(self, doc):
 
